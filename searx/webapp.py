@@ -1140,4 +1140,6 @@ application = app
 app.wsgi_app = ReverseProxyPathFix(ProxyFix(application.wsgi_app))
 
 if __name__ == "__main__":
-    run()
+    # bind to PORT if defined for heroku, otherwise default to 5000.
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
