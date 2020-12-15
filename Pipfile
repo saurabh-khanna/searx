@@ -1,0 +1,23 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+certifi = "==2020.6.20"
+idna = "==2.10"
+lxml = "==4.6.1"
+python-dateutil = "==2.8.0"
+requests = {version = "==2.24.0", extras = ["socks"]}
+Babel = "==2.7.0"
+Flask-Babel = "==1.0.0"
+Flask = "==1.1.2"
+Jinja2 = "==2.11.1"
+Pygments = "==2.1.3"
+pyOpenSSL = "==19.1.0"
+PyYAML = "==5.3.1"
+
+[dev-packages]
+
+[requires]
+python_version = "3.8"
