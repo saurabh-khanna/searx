@@ -77,7 +77,7 @@ class RawTextQuery:
                     pass
 
             # this force a language
-            if query_part[0] == ':':
+            if query_part[0] == ':' and len(query_part) > 1:
                 lang = query_part[1:].lower().replace('_', '-')
 
                 # check if any language-code is equal with
@@ -125,12 +125,12 @@ class RawTextQuery:
                     searx_query_part = True
                     engine_name = engine_shortcuts[prefix]
                     if engine_name in engines:
-                        self.enginerefs.append(EngineRef(engine_name, 'none', True))
+                        self.enginerefs.append(EngineRef(engine_name, 'none'))
 
                 # check if prefix is equal with engine name
                 elif prefix in engines:
                     searx_query_part = True
-                    self.enginerefs.append(EngineRef(prefix, 'none', True))
+                    self.enginerefs.append(EngineRef(prefix, 'none'))
 
                 # check if prefix is equal with categorie name
                 elif prefix in categories:

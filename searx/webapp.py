@@ -60,7 +60,7 @@ from searx import brand, static_path
 from searx import settings, searx_dir, searx_debug
 from searx.exceptions import SearxParameterException
 from searx.engines import (
-    categories, engines, engine_shortcuts, get_engines_stats, initialize_engines
+    categories, engines, engine_shortcuts, get_engines_stats
 )
 from searx.webutils import (
     UnicodeWriter, highlight_content, get_resources_directory,
@@ -71,7 +71,8 @@ from searx.webadapter import get_search_query_from_webapp, get_selected_categori
 from searx.utils import html_to_text, gen_useragent, dict_subset, match_language
 from searx.version import VERSION_STRING
 from searx.languages import language_codes as languages
-from searx.search import SearchWithPlugins
+from searx.search import SearchWithPlugins, initialize as search_initialize
+from searx.search.checker import get_result as checker_get_result
 from searx.query import RawTextQuery
 from searx.autocomplete import searx_bang, backends as autocomplete_backends
 from searx.plugins import plugins
@@ -81,10 +82,14 @@ from searx.answerers import answerers
 from searx.poolrequests import get_global_proxies
 from searx.metrology.error_recorder import errors_per_engines
 
-
 # serve pages with HTTP/1.1
 from werkzeug.serving import WSGIRequestHandler
 WSGIRequestHandler.protocol_version = "HTTP/{}".format(settings['server'].get('http_protocol_version', '1.0'))
+
+# check secret_key
+if not searx_debug and settings['server']['secret_key'] == 'ultrasecretkey':
+    logger.error('server.secret_key is not changed. Please use something else instead of ultrasecretkey.')
+    exit(1)
 
 # about static
 static_path = get_resources_directory(searx_dir, 'static', settings['ui']['static_path'])
@@ -131,7 +136,7 @@ werkzeug_reloader = flask_run_development or (searx_debug and __name__ == "__mai
 # initialize the engines except on the first run of the werkzeug server.
 if not werkzeug_reloader\
    or (werkzeug_reloader and os.environ.get("WERKZEUG_RUN_MAIN") == "true"):
-    initialize_engines(settings['engines'])
+    search_initialize(enable_checker=True)
 
 babel = Babel(app)
 
@@ -972,6 +977,12 @@ def stats_errors():
     return jsonify(result)
 
 
+@app.route('/stats/checker', methods=['GET'])
+def stats_checker():
+    result = checker_get_result()
+    return jsonify(result)
+
+
 @app.route('/robots.txt', methods=['GET'])
 def robots():
     return Response("""User-agent: *
@@ -1066,6 +1077,7 @@ def config():
         'default_theme': settings['ui']['default_theme'],
         'version': VERSION_STRING,
         'brand': {
+            'CONTACT_URL': brand.CONTACT_URL,
             'GIT_URL': brand.GIT_URL,
             'DOCS_URL': brand.DOCS_URL
         },

@@ -20,7 +20,7 @@ lxc_set_suite_env
 
 LXC_HOST_PREFIX="${LXC_HOST_PREFIX:-test}"
 
-# where all folders from HOST are mounted
+# Location in the container where all folders from HOST are mounted
 LXC_SHARE_FOLDER="/share"
 LXC_REPO_ROOT="${LXC_SHARE_FOLDER}/$(basename "${REPO_ROOT}")"
 
@@ -32,13 +32,14 @@ apt-get install -y git curl wget
 "
 ubu1804_boilerplate="$ubu1604_boilerplate"
 ubu1904_boilerplate="$ubu1804_boilerplate"
-ubu1910_boilerplate="$ubu1904_boilerplate"
 
 # shellcheck disable=SC2034
 ubu2004_boilerplate="
-$ubu1910_boilerplate
+$ubu1904_boilerplate
 echo 'Set disable_coredump false' >> /etc/sudo.conf
 "
+
+ubu2010_boilerplate="$ubu1904_boilerplate"
 
 # shellcheck disable=SC2034
 archlinux_boilerplate="

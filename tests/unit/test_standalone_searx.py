@@ -8,8 +8,7 @@ import sys
 from mock import Mock, patch
 from nose2.tools import params
 
-from searx.search import SearchQuery, EngineRef
-from searx.engines import initialize_engines
+from searx.search import SearchQuery, EngineRef, initialize
 from searx.testing import SearxTestCase
 
 
@@ -30,7 +29,7 @@ class StandaloneSearx(SearxTestCase):
     def setUpClass(cls):
         engine_list = [{'engine': 'dummy', 'name': 'engine1', 'shortcut': 'e1'}]
 
-        initialize_engines(engine_list)
+        initialize(engine_list)
 
     def test_parse_argument_no_args(self):
         """Test parse argument without args."""
@@ -102,8 +101,8 @@ class StandaloneSearx(SearxTestCase):
         args = sas.parse_argument(['rain', ])
         search_q = sas.get_search_query(args)
         self.assertTrue(search_q)
-        self.assertEqual(search_q, SearchQuery('rain', [EngineRef('engine1', 'general', False)],
-                         ['general'], 'all', 0, 1, None, None, None))
+        self.assertEqual(search_q, SearchQuery('rain', [EngineRef('engine1', 'general')],
+                         'all', 0, 1, None, None, None))
 
     def test_no_parsed_url(self):
         """test no_parsed_url func"""

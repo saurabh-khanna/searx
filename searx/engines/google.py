@@ -1,19 +1,11 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """Google (Web)
 
-:website:     https://www.google.com
-:provide-api: yes (https://developers.google.com/custom-search/)
-:using-api:   not the offical, since it needs registration to another service
-:results:     HTML
-:stable:      no
-:parse:       url, title, content, number_of_results, answer, suggestion, correction
+ For detailed description of the *REST-full* API see: `Query Parameter
+ Definitions`_.
 
-For detailed description of the *REST-full* API see: `Query Parameter
-Definitions`_.
-
-.. _Query Parameter Definitions:
-   https://developers.google.com/custom-search/docs/xml_results#WebSearch_Query_Parameter_Definitions
-
+ .. _Query Parameter Definitions:
+ https://developers.google.com/custom-search/docs/xml_results#WebSearch_Query_Parameter_Definitions
 """
 
 # pylint: disable=invalid-name, missing-function-docstring
@@ -26,6 +18,16 @@ from searx.exceptions import SearxEngineCaptchaException
 
 
 logger = logger.getChild('google engine')
+
+# about
+about = {
+    "website": 'https://www.google.com',
+    "wikidata_id": 'Q9366',
+    "official_api_documentation": 'https://developers.google.com/custom-search/',
+    "use_official_api": False,
+    "require_api_key": False,
+    "results": 'HTML',
+}
 
 # engine dependent config
 categories = ['general']
@@ -153,6 +155,11 @@ def get_lang_country(params, lang_list, custom_aliases):
 
     return language, country, lang_country
 
+def detect_google_sorry(resp):
+    resp_url = urlparse(resp.url)
+    if resp_url.netloc == 'sorry.google.com' or resp_url.path.startswith('/sorry'):
+        raise SearxEngineCaptchaException()
+
 
 def request(query, params):
     """Google search request"""
@@ -198,16 +205,10 @@ def request(query, params):
 
 def response(resp):
     """Get response from google's search request"""
+
+    detect_google_sorry(resp)
+
     results = []
-
-    # detect google sorry
-    resp_url = urlparse(resp.url)
-    if resp_url.netloc == 'sorry.google.com' or resp_url.path == '/sorry/IndexRedirect':
-        raise SearxEngineCaptchaException()
-
-    if resp_url.path.startswith('/sorry'):
-        raise SearxEngineCaptchaException()
-
     # which subdomain ?
     # subdomain = resp.search_params.get('google_subdomain')
 

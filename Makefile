@@ -1,19 +1,12 @@
 # -*- coding: utf-8; mode: makefile-gmake -*-
 .DEFAULT_GOAL=help
 
-# START Makefile setup
-export GIT_URL=https://github.com/searx/searx
-export GIT_BRANCH=master
-export SEARX_URL=https://searx.me
-export DOCS_URL=https://searx.github.io/searx
-# END Makefile setup
-
 include utils/makefile.include
 
 PYOBJECTS = searx
 DOC       = docs
 PY_SETUP_EXTRAS ?= \[test\]
-PYLINT_SEARX_DISABLE_OPTION := I,C,R,W0105,W0212,W0511,W0603,W0613,W0621,W0702,W0703,W1401
+PYLINT_SEARX_DISABLE_OPTION := I,C,R,W0105,W0212,W0511,W0603,W0613,W0621,W0702,W0703,W1401,E1136
 PYLINT_ADDITIONAL_BUILTINS_FOR_ENGINES := supported_languages,language_aliases
 
 include utils/makefile.python
@@ -41,11 +34,6 @@ help-min:
 	@echo  '  themes    - re-build build the source of the themes'
 	@echo  '  docker    - build Docker image'
 	@echo  '  node.env  - download & install npm dependencies locally'
-	@echo  ''
-	@echo  'environment'
-	@echo  '  SEARX_URL = $(SEARX_URL)'
-	@echo  '  GIT_URL   = $(GIT_URL)'
-	@echo  '  DOCS_URL  = $(DOCS_URL)'
 	@echo  ''
 	@$(MAKE) -e -s make-help
 
@@ -116,22 +104,8 @@ useragents.update:  pyenvinstall
 	$(Q)echo "Update searx/data/useragents.json with the most recent versions of Firefox."
 	$(Q)$(PY_ENV_ACT); python utils/fetch_firefox_version.py
 
-buildenv:
-	$(Q)echo "build searx/brand.py"
-	$(Q)echo "GIT_URL = '$(GIT_URL)'"  > searx/brand.py
-	$(Q)echo "GIT_BRANCH = '$(GIT_BRANCH)'"  >> searx/brand.py
-	$(Q)echo "ISSUE_URL = 'https://github.com/searx/searx/issues'" >> searx/brand.py
-	$(Q)echo "SEARX_URL = '$(SEARX_URL)'" >> searx/brand.py
-	$(Q)echo "DOCS_URL = '$(DOCS_URL)'" >> searx/brand.py
-	$(Q)echo "PUBLIC_INSTANCES = 'https://searx.space'" >> searx/brand.py
-	$(Q)echo "build utils/brand.env"
-	$(Q)echo "export GIT_URL='$(GIT_URL)'"  > utils/brand.env
-	$(Q)echo "export GIT_BRANCH='$(GIT_BRANCH)'"  >> utils/brand.env
-	$(Q)echo "export ISSUE_URL='https://github.com/searx/searx/issues'" >> utils/brand.env
-	$(Q)echo "export SEARX_URL='$(SEARX_URL)'" >> utils/brand.env
-	$(Q)echo "export DOCS_URL='$(DOCS_URL)'" >> utils/brand.env
-	$(Q)echo "export PUBLIC_INSTANCES='https://searx.space'" >> utils/brand.env
-
+buildenv: pyenv
+	$(Q)$(PY_ENV_ACT); SEARX_DEBUG=1 python utils/build_env.py
 
 # node / npm
 # ----------
@@ -152,8 +126,8 @@ node.clean:
 # build themes
 # ------------
 
-PHONY += themes.bootstrap themes themes.oscar themes.simple themes.legacy themes.courgette themes.pixart
-themes: buildenv themes.bootstrap themes.oscar themes.simple themes.legacy themes.courgette themes.pixart
+PHONY += themes.bootstrap themes themes.oscar themes.simple
+themes: buildenv themes.bootstrap themes.oscar themes.simple
 
 quiet_cmd_lessc = LESSC     $3
       cmd_lessc = PATH="$$(npm bin):$$PATH" \
@@ -170,20 +144,6 @@ themes.oscar: node.env
 themes.simple: node.env
 	$(Q)echo '[!] build simple theme'
 	$(call cmd,grunt,searx/static/themes/simple/gruntfile.js)
-
-themes.legacy: node.env
-	$(Q)echo '[!] build legacy theme'
-	$(call cmd,lessc,themes/legacy/less/style-rtl.less,themes/legacy/css/style-rtl.css)
-	$(call cmd,lessc,themes/legacy/less/style.less,themes/legacy/css/style.css)
-
-themes.courgette: node.env
-	$(Q)echo '[!] build courgette theme'
-	$(call cmd,lessc,themes/courgette/less/style.less,themes/courgette/css/style.css)
-	$(call cmd,lessc,themes/courgette/less/style-rtl.less,themes/courgette/css/style-rtl.css)
-
-themes.pixart: node.env
-	$(Q)echo '[!] build pixart theme'
-	$(call cmd,lessc,themes/pix-art/less/style.less,themes/pix-art/css/style.css)
 
 themes.bootstrap: node.env
 	$(call cmd,lessc,less/bootstrap/bootstrap.less,css/bootstrap.min.css)
@@ -217,7 +177,9 @@ PYLINT_FILES=\
 	searx/testing.py \
 	searx/engines/gigablast.py \
 	searx/engines/deviantart.py \
-	searx/engines/digg.py
+	searx/engines/digg.py \
+	searx/engines/google.py \
+	searx/engines/google_news.py
 
 test.pylint: pyenvinstall
 	$(call cmd,pylint,$(PYLINT_FILES))
